@@ -7,6 +7,15 @@ type Vector struct {
 	X, Y, Z float64
 }
 
+// New creates a new Vector
+func New(X, Y, Z float64) Vector {
+	return Vector{
+		X: X,
+		Y: Y,
+		Z: Z,
+	}
+}
+
 // Add adds two vectors
 func (a Vector) Add(b Vector) Vector {
 	return Vector{
