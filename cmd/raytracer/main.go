@@ -6,16 +6,21 @@ import (
 	"image/jpeg"
 	"os"
 	"raytracer/internal/color"
+	"raytracer/internal/object"
 	"raytracer/internal/ray"
 	"raytracer/internal/vector"
 
 	_ "image/jpeg" // Needed for JPEG decoder
 )
 
+var testSphere object.Sphere
+
 func main() {
+	testSphere = object.NewSphere(vector.New(0, 0, -1), 0.5)
+
 	// Image config
 	const aspectRatio = 16.0 / 9.0
-	const imageWidth = 1280
+	const imageWidth = 1920
 	const imageHeight = int(imageWidth / aspectRatio)
 
 	// Camera config
@@ -60,6 +65,11 @@ func main() {
 
 // Red to blue gradient based on y coord
 func colorRay(r ray.Ray) gocolor.RGBA {
+	if t := testSphere.Intersect(r); t > 0 {
+		// Calculate the normal using the hit point and the sphere center
+		var normal = r.At(t).Sub(testSphere.Center()).Normalise()
+		return color.New(float32(normal.X)+1, float32(normal.Y)+1, float32(normal.Z)+1).Mul(0.5, 0.5, 0.5).RGBA()
+	}
 	t := float32(0.5 * (r.Direction().Normalise().Y + 1.0))
-	return color.New(1.0, 0, 0).Mul(1-t, 1-t, 1-t).Add(color.New(0, 0, 1).Mul(t, t, t)).RGBA()
+	return color.New(1, 1, 1).Mul(1-t, 1-t, 1-t).Add(color.New(0.5, 0.7, 1).Mul(t, t, t)).RGBA()
 }

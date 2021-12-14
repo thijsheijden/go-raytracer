@@ -64,5 +64,5 @@ func (a Vector) Cross(b Vector) Vector {
 
 // Normalise normalises a vector
 func (a Vector) Normalise() Vector {
-	return a.Scale(1. / a.Length())
+	return a.Scale(1 / a.Length())
 }

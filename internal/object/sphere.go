@@ -1,6 +1,7 @@
 package object
 
 import (
+	"math"
 	"raytracer/internal/ray"
 	"raytracer/internal/vector"
 )
@@ -11,8 +12,8 @@ type Sphere struct {
 	radius float64
 }
 
-// New creates a new Sphere
-func New(center vector.Vector, radius float64) Sphere {
+// NewSphere creates a new Sphere
+func NewSphere(center vector.Vector, radius float64) Sphere {
 	return Sphere{
 		center: center,
 		radius: radius,
@@ -30,11 +31,19 @@ func (s *Sphere) Radius() float64 {
 }
 
 // Intersect checks whether a ray r intersects the sphere
-func (s *Sphere) Intersect(r ray.Ray) bool {
-	var a = r.Direction().Dot(r.Direction())
+// Returns the t at which the intersection occurs, if there is no intersection -1.0 is returned
+func (s *Sphere) Intersect(r ray.Ray) float64 {
 	var oc = r.Origin().Sub(s.center)
-	var b = 2.0 * oc.Dot(r.Direction())
-	var c = oc.Dot(oc) - s.radius*s.radius
-	var discriminant = b*b - 4*a*c
-	return discriminant > 0
+	var a = math.Pow(r.Direction().Length(), 2)
+	var halfB = oc.Dot(r.Direction())
+	var c = math.Pow(oc.Length(), 2) - math.Pow(s.radius, 2)
+	var discriminant = math.Pow(halfB, 2) - a*c
+
+	if discriminant > 0 {
+		// Calculate t
+		return (-halfB - math.Sqrt(discriminant)) / a
+	}
+
+	// No intersection
+	return -1.0
 }
