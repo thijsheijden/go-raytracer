@@ -8,6 +8,13 @@ type Ray struct {
 	direction vector.Vector
 }
 
+func New(origin, direction vector.Vector) Ray {
+	return Ray{
+		origin:    origin,
+		direction: direction,
+	}
+}
+
 // Origin returns the ray origin
 func (r *Ray) Origin() vector.Vector {
 	return r.origin
