@@ -56,7 +56,8 @@ func (s *Sphere) Intersect(r *ray.Ray, tMin, tMax float64, hit *Hit) bool {
 
 	hit.T = root
 	hit.Point = r.At(root)
-	hit.Normal = hit.Point.Sub(s.center).Scale(1 / s.radius)
+	outwardNormal := hit.Point.Sub(s.center).Scale(1 / s.radius)
+	hit.SetFaceNormal(r, &outwardNormal)
 
 	return true
 }
