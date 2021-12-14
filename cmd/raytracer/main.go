@@ -65,9 +65,10 @@ func main() {
 
 // Red to blue gradient based on y coord
 func colorRay(r ray.Ray) gocolor.RGBA {
-	if t := testSphere.Intersect(r); t > 0 {
+	var hit object.Hit
+	if testSphere.Intersect(&r, 0, 10, &hit) {
 		// Calculate the normal using the hit point and the sphere center
-		var normal = r.At(t).Sub(testSphere.Center()).Normalise()
+		var normal = hit.Normal
 		return color.New(float32(normal.X)+1, float32(normal.Y)+1, float32(normal.Z)+1).Mul(0.5, 0.5, 0.5).RGBA()
 	}
 	t := float32(0.5 * (r.Direction().Normalise().Y + 1.0))

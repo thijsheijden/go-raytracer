@@ -30,20 +30,33 @@ func (s *Sphere) Radius() float64 {
 	return s.radius
 }
 
-// Intersect checks whether a ray r intersects the sphere
-// Returns the t at which the intersection occurs, if there is no intersection -1.0 is returned
-func (s *Sphere) Intersect(r ray.Ray) float64 {
+// Intersect calculates the intersection of a ray r with this sphere, between tMin and tMax
+func (s *Sphere) Intersect(r *ray.Ray, tMin, tMax float64, hit *Hit) bool {
 	var oc = r.Origin().Sub(s.center)
 	var a = math.Pow(r.Direction().Length(), 2)
 	var halfB = oc.Dot(r.Direction())
 	var c = math.Pow(oc.Length(), 2) - math.Pow(s.radius, 2)
 	var discriminant = math.Pow(halfB, 2) - a*c
 
-	if discriminant > 0 {
-		// Calculate t
-		return (-halfB - math.Sqrt(discriminant)) / a
+	// No hit
+	if discriminant < 0 {
+		return false
 	}
 
-	// No intersection
-	return -1.0
+	var sqrtD = math.Sqrt(discriminant)
+
+	// Find the nearest t
+	var root = (-halfB - sqrtD) / a
+	if root < tMin || tMax < root {
+		root = (-halfB + sqrtD) / a
+		if root < tMin || tMax < root {
+			return false
+		}
+	}
+
+	hit.T = root
+	hit.Point = r.At(root)
+	hit.Normal = hit.Point.Sub(s.center).Scale(1 / s.radius)
+
+	return true
 }
