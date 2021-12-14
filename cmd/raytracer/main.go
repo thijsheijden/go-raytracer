@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"image"
 	gocolor "image/color"
 	"image/jpeg"
@@ -8,15 +9,27 @@ import (
 	"raytracer/internal/color"
 	"raytracer/internal/object"
 	"raytracer/internal/ray"
+	"raytracer/internal/scene"
 	"raytracer/internal/vector"
 
 	_ "image/jpeg" // Needed for JPEG decoder
 )
 
-var testSphere object.Sphere
+var loadedScene scene.Scene
 
 func main() {
-	testSphere = object.NewSphere(vector.New(0, 0, -1), 0.5)
+	// Load in a scene file
+	f, err := os.Open("scenes/singleSphere.json")
+	if err != nil {
+		panic(err)
+	}
+
+	// Decode the scene
+	err = json.NewDecoder(f).Decode(&loadedScene)
+	if err != nil {
+		panic(err)
+	}
+	f.Close()
 
 	// Image config
 	const aspectRatio = 16.0 / 9.0
@@ -26,7 +39,7 @@ func main() {
 	// Camera config
 	const viewportHeight = 2.0
 	const viewportWidth = aspectRatio * viewportHeight
-	const focalLength = 1.0
+	const focalLength = 1
 
 	var origin = vector.Vector{0, 0, 0}
 	var horizontal = vector.Vector{viewportWidth, 0, 0}
@@ -46,7 +59,7 @@ func main() {
 	}
 
 	// Save image
-	f, err := os.Create("outimage.jpg")
+	f, err = os.Create("outimage.jpg")
 	if err != nil {
 		// Handle error
 	}
@@ -66,11 +79,25 @@ func main() {
 // Red to blue gradient based on y coord
 func colorRay(r ray.Ray) gocolor.RGBA {
 	var hit object.Hit
-	if testSphere.Intersect(&r, 0, 10, &hit) {
-		// Calculate the normal using the hit point and the sphere center
-		var normal = hit.Normal
+
+	// Go over all spheres
+	closest := 15.0 // tMax
+	hitSomething := false
+	var normal vector.Vector
+	for _, s := range loadedScene.Spheres {
+		if s.Intersect(&r, 0, 15, &hit) {
+			if hit.T < closest {
+				closest = hit.T
+				normal = hit.Normal
+				hitSomething = true
+			}
+		}
+	}
+
+	if hitSomething {
 		return color.New(float32(normal.X)+1, float32(normal.Y)+1, float32(normal.Z)+1).Mul(0.5, 0.5, 0.5).RGBA()
 	}
+
 	t := float32(0.5 * (r.Direction().Normalise().Y + 1.0))
 	return color.New(1, 1, 1).Mul(1-t, 1-t, 1-t).Add(color.New(0.5, 0.7, 1).Mul(t, t, t)).RGBA()
 }

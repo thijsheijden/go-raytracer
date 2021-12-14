@@ -8,34 +8,24 @@ import (
 
 // Sphere is a sphere, duh
 type Sphere struct {
-	center vector.Vector
-	radius float64
+	Center vector.Vector `json:"center"`
+	Radius float64       `json:"radius"`
 }
 
 // NewSphere creates a new Sphere
 func NewSphere(center vector.Vector, radius float64) Sphere {
 	return Sphere{
-		center: center,
-		radius: radius,
+		Center: center,
+		Radius: radius,
 	}
-}
-
-// Center returns the sphere center
-func (s *Sphere) Center() vector.Vector {
-	return s.center
-}
-
-// Radius returns the sphere radius
-func (s *Sphere) Radius() float64 {
-	return s.radius
 }
 
 // Intersect calculates the intersection of a ray r with this sphere, between tMin and tMax
 func (s *Sphere) Intersect(r *ray.Ray, tMin, tMax float64, hit *Hit) bool {
-	var oc = r.Origin().Sub(s.center)
+	var oc = r.Origin().Sub(s.Center)
 	var a = math.Pow(r.Direction().Length(), 2)
 	var halfB = oc.Dot(r.Direction())
-	var c = math.Pow(oc.Length(), 2) - math.Pow(s.radius, 2)
+	var c = math.Pow(oc.Length(), 2) - math.Pow(s.Radius, 2)
 	var discriminant = math.Pow(halfB, 2) - a*c
 
 	// No hit
@@ -56,7 +46,7 @@ func (s *Sphere) Intersect(r *ray.Ray, tMin, tMax float64, hit *Hit) bool {
 
 	hit.T = root
 	hit.Point = r.At(root)
-	outwardNormal := hit.Point.Sub(s.center).Scale(1 / s.radius)
+	outwardNormal := hit.Point.Sub(s.Center).Scale(1 / s.Radius)
 	hit.SetFaceNormal(r, &outwardNormal)
 
 	return true
