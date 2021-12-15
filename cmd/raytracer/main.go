@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"image"
-	gocolor "image/color"
 	"image/jpeg"
+	"math/rand"
 	"os"
 	"raytracer/internal/color"
 	"raytracer/internal/object"
@@ -16,6 +16,7 @@ import (
 )
 
 var loadedScene scene.Scene
+var nPixelSamples = 100
 
 func main() {
 	// Load in a scene file
@@ -33,7 +34,7 @@ func main() {
 
 	// Image config
 	const aspectRatio = 16.0 / 9.0
-	const imageWidth = 1920
+	const imageWidth = 1280
 	const imageHeight = int(imageWidth / aspectRatio)
 
 	// Camera config
@@ -51,10 +52,19 @@ func main() {
 	// Cast rays for each of the image pixels
 	for y := imageHeight - 1; y >= 0; y-- {
 		for x := 0; x < imageWidth; x++ {
-			var u float64 = float64(x) / (imageWidth + 1)
-			var v float64 = float64(y) / float64(imageHeight+1)
-			r := ray.New(origin, lowerLeftCorner.Add(horizontal.Scale(u)).Add(vertical.Scale(v)).Sub(origin))
-			image.Set(x, y, colorRay(r))
+			// Define a new color for this pixel, which we will average later
+			var pixelColor color.RGB = color.New(0, 0, 0)
+
+			// Anti-aliasing
+			for i := 0; i < nPixelSamples; i++ {
+				var u float64 = (float64(x) + rand.Float64()) / (imageWidth + 1)
+				var v float64 = (float64(y) + rand.Float64()) / float64(imageHeight+1)
+				r := ray.New(origin, lowerLeftCorner.Add(horizontal.Scale(u)).Add(vertical.Scale(v)).Sub(origin))
+				pixelColor = pixelColor.Add(colorRay(r))
+			}
+
+			// Set pixel in the image
+			image.Set(x, imageHeight-y, pixelColor.Average(nPixelSamples).RGBA()) // Flipping y coordinates
 		}
 	}
 
@@ -77,7 +87,7 @@ func main() {
 }
 
 // Red to blue gradient based on y coord
-func colorRay(r ray.Ray) gocolor.RGBA {
+func colorRay(r ray.Ray) color.RGB {
 	var hit object.Hit
 
 	// Go over all spheres
@@ -95,9 +105,9 @@ func colorRay(r ray.Ray) gocolor.RGBA {
 	}
 
 	if hitSomething {
-		return color.New(float32(normal.X)+1, float32(normal.Y)+1, float32(normal.Z)+1).Mul(0.5, 0.5, 0.5).RGBA()
+		return color.New(float32(normal.X)+1, float32(normal.Y)+1, float32(normal.Z)+1).Mul(0.5, 0.5, 0.5)
 	}
 
 	t := float32(0.5 * (r.Direction().Normalise().Y + 1.0))
-	return color.New(1, 1, 1).Mul(1-t, 1-t, 1-t).Add(color.New(0.5, 0.7, 1).Mul(t, t, t)).RGBA()
+	return color.New(1, 1, 1).Mul(1-t, 1-t, 1-t).Add(color.New(0.5, 0.7, 1).Mul(t, t, t))
 }

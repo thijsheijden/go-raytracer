@@ -19,9 +19,9 @@ func New(R, G, B float32) RGB {
 // RGBA converts the RGB color to RGBA color
 func (c RGB) RGBA() color.RGBA {
 	return color.RGBA{
-		R: uint8(c.R * 255),
-		G: uint8(c.G * 255),
-		B: uint8(c.B * 255),
+		R: uint8(clamp(c.R, 0, 1) * 255),
+		G: uint8(clamp(c.G, 0, 1) * 255),
+		B: uint8(clamp(c.B, 0, 1) * 255),
 		A: 255,
 	}
 }
@@ -42,4 +42,23 @@ func (c RGB) Add(c2 RGB) RGB {
 		G: c.G + c2.G,
 		B: c.B + c2.B,
 	}
+}
+
+// Average averages the color over n samples
+func (c RGB) Average(nSamples int) RGB {
+	return RGB{
+		R: c.R / float32(nSamples),
+		G: c.G / float32(nSamples),
+		B: c.B / float32(nSamples),
+	}
+}
+
+func clamp(value, min, max float32) float32 {
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
 }
