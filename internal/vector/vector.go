@@ -22,14 +22,14 @@ func New(X, Y, Z float64) Vector {
 }
 
 // Random generates a random vector with the provided min and max values
-func Random(min, max float64) Vector {
-	return New(min+rand.Float64()*(max-min), min+rand.Float64()*(max-min), min+rand.Float64()*(max-min))
+func Random(min, max float64, random *rand.Rand) Vector {
+	return New(min+random.Float64()*(max-min), min+random.Float64()*(max-min), min+random.Float64()*(max-min))
 }
 
 // RandomInUnitSphere generates a random vector within a unit sphere
-func RandomInUnitSphere() Vector {
+func RandomInUnitSphere(random *rand.Rand) Vector {
 	for {
-		p := Random(-1, 1)
+		p := Random(-1, 1, random)
 		if math.Pow(p.Length(), 2) >= 1 {
 			// Outside unit sphere
 			continue

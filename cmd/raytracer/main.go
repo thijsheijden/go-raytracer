@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/draw"
 	"image/jpeg"
-	"log"
 	"math"
 	"math/rand"
 	"os"
@@ -14,7 +13,6 @@ import (
 	"raytracer/internal/ray"
 	"raytracer/internal/scene"
 	"raytracer/internal/vector"
-	"runtime/pprof"
 	"sync"
 	"time"
 
@@ -27,7 +25,7 @@ var maxDepth = 50
 var infinity = math.Inf(1)
 
 // Number of threads to split the work up
-const nThreads = 4
+const nThreads = 16
 
 type imagePart struct {
 	index, height int
@@ -48,12 +46,9 @@ func main() {
 	}
 	f.Close()
 
-	// Seed the random function
-	rand.Seed(time.Now().UnixNano())
-
 	// Image config
 	const aspectRatio = 16.0 / 9.0
-	const imageWidth = 400
+	const imageWidth = 1920
 	const imageHeight = int(imageWidth / aspectRatio)
 
 	// Camera config
@@ -69,12 +64,12 @@ func main() {
 	const rowsPerThread = imageHeight / nThreads
 	const rest = imageHeight - (nThreads * rowsPerThread)
 
-	cpuProfile, err := os.Create("profile.pprof")
-	if err != nil {
-		log.Fatal(err)
-	}
-	pprof.StartCPUProfile(cpuProfile)
-	defer pprof.StopCPUProfile()
+	// cpuProfile, err := os.Create("profile.pprof")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// pprof.StartCPUProfile(cpuProfile)
+	// defer pprof.StopCPUProfile()
 
 	var wg sync.WaitGroup
 	imagePartChan := make(chan imagePart, nThreads)
@@ -86,10 +81,13 @@ func main() {
 			endY += rest
 		}
 
+		// Generate random generator
+		random := rand.New(rand.NewSource(time.Now().UnixNano()))
+
 		// Join waitgroup
 		wg.Add(1)
 
-		go func(thread, startY, endY int, imagePartChan chan imagePart) {
+		go func(thread, startY, endY int, random *rand.Rand, imagePartChan chan imagePart) {
 			defer wg.Done()
 			// Create slice for image part
 			img := image.NewRGBA(image.Rect(0, 0, imageWidth, (endY - startY)))
@@ -102,10 +100,10 @@ func main() {
 
 					// Anti-aliasing
 					for i := 0; i < nPixelSamples; i++ {
-						var u float64 = (float64(x) + rand.Float64()) / (imageWidth + 1)
-						var v float64 = (float64(y) + rand.Float64()) / float64(imageHeight+1)
+						var u float64 = (float64(x) + random.Float64()) / (imageWidth + 1)
+						var v float64 = (float64(y) + random.Float64()) / float64(imageHeight+1)
 						r := ray.New(origin, lowerLeftCorner.Add(horizontal.Scale(u)).Add(vertical.Scale(v)).Sub(origin))
-						pixelColor = pixelColor.Add(colorRay(r, maxDepth))
+						pixelColor = pixelColor.Add(colorRay(r, maxDepth, random))
 					}
 
 					// Set pixel in slice
@@ -116,7 +114,7 @@ func main() {
 			// Thread is done
 			imagePartChan <- imagePart{index: nThreads - thread - 1, height: endY - startY, image: img}
 
-		}(thread, startY, endY, imagePartChan)
+		}(thread, startY, endY, random, imagePartChan)
 	}
 
 	// Wait for all threads to finish
@@ -149,7 +147,7 @@ func main() {
 }
 
 // Red to blue gradient based on y coord
-func colorRay(r ray.Ray, depth int) color.RGB {
+func colorRay(r ray.Ray, depth int, random *rand.Rand) color.RGB {
 	// Reached max recursion depth
 	if depth <= 0 {
 		return color.New(0, 0, 0)
@@ -160,8 +158,8 @@ func colorRay(r ray.Ray, depth int) color.RGB {
 	// Go over all spheres
 	for _, s := range loadedScene.Spheres {
 		if s.Intersect(&r, 0.001, infinity, &hit) {
-			target := hit.Point.Add(hit.Normal).Add(vector.RandomInUnitSphere())
-			return colorRay(ray.New(hit.Point, target.Sub(hit.Point)), depth-1).Mul(0.5, 0.5, 0.5)
+			target := hit.Point.Add(hit.Normal).Add(vector.RandomInUnitSphere(random))
+			return colorRay(ray.New(hit.Point, target.Sub(hit.Point)), depth-1, random).Mul(0.5, 0.5, 0.5)
 		}
 	}
 
