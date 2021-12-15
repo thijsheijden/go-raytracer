@@ -1,6 +1,9 @@
 package vector
 
-import "math"
+import (
+	"math"
+	"math/rand"
+)
 
 // Vector is a 3 dimensional vector
 type Vector struct {
@@ -15,6 +18,23 @@ func New(X, Y, Z float64) Vector {
 		X: X,
 		Y: Y,
 		Z: Z,
+	}
+}
+
+// Random generates a random vector with the provided min and max values
+func Random(min, max float64) Vector {
+	return New(min+rand.Float64()*(max-min), min+rand.Float64()*(max-min), min+rand.Float64()*(max-min))
+}
+
+// RandomInUnitSphere generates a random vector within a unit sphere
+func RandomInUnitSphere() Vector {
+	for {
+		p := Random(-1, 1)
+		if math.Pow(p.Length(), 2) >= 1 {
+			// Outside unit sphere
+			continue
+		}
+		return p
 	}
 }
 

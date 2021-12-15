@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"image"
 	"image/jpeg"
+	"math"
 	"math/rand"
 	"os"
 	"raytracer/internal/color"
@@ -11,12 +12,15 @@ import (
 	"raytracer/internal/ray"
 	"raytracer/internal/scene"
 	"raytracer/internal/vector"
+	"time"
 
 	_ "image/jpeg" // Needed for JPEG decoder
 )
 
 var loadedScene scene.Scene
 var nPixelSamples = 100
+var maxDepth = 20
+var infinity = math.Inf(1)
 
 func main() {
 	// Load in a scene file
@@ -32,9 +36,12 @@ func main() {
 	}
 	f.Close()
 
+	// Seed the random function
+	rand.Seed(time.Now().UnixNano())
+
 	// Image config
 	const aspectRatio = 16.0 / 9.0
-	const imageWidth = 1280
+	const imageWidth = 400
 	const imageHeight = int(imageWidth / aspectRatio)
 
 	// Camera config
@@ -60,7 +67,7 @@ func main() {
 				var u float64 = (float64(x) + rand.Float64()) / (imageWidth + 1)
 				var v float64 = (float64(y) + rand.Float64()) / float64(imageHeight+1)
 				r := ray.New(origin, lowerLeftCorner.Add(horizontal.Scale(u)).Add(vertical.Scale(v)).Sub(origin))
-				pixelColor = pixelColor.Add(colorRay(r))
+				pixelColor = pixelColor.Add(colorRay(r, maxDepth))
 			}
 
 			// Set pixel in the image
@@ -87,25 +94,20 @@ func main() {
 }
 
 // Red to blue gradient based on y coord
-func colorRay(r ray.Ray) color.RGB {
+func colorRay(r ray.Ray, depth int) color.RGB {
+	// Reached max recursion depth
+	if depth <= 0 {
+		return color.New(0, 0, 0)
+	}
+
 	var hit object.Hit
 
 	// Go over all spheres
-	closest := 15.0 // tMax
-	hitSomething := false
-	var normal vector.Vector
 	for _, s := range loadedScene.Spheres {
-		if s.Intersect(&r, 0, 15, &hit) {
-			if hit.T < closest {
-				closest = hit.T
-				normal = hit.Normal
-				hitSomething = true
-			}
+		if s.Intersect(&r, 0.001, infinity, &hit) {
+			target := hit.Point.Add(hit.Normal).Add(vector.RandomInUnitSphere())
+			return colorRay(ray.New(hit.Point, target.Sub(hit.Point)), depth-1).Mul(0.5, 0.5, 0.5)
 		}
-	}
-
-	if hitSomething {
-		return color.New(float32(normal.X)+1, float32(normal.Y)+1, float32(normal.Z)+1).Mul(0.5, 0.5, 0.5)
 	}
 
 	t := float32(0.5 * (r.Direction().Normalise().Y + 1.0))

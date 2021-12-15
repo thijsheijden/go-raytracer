@@ -1,6 +1,9 @@
 package color
 
-import "image/color"
+import (
+	"image/color"
+	"math"
+)
 
 // RGB describes an RGB color using float values between 0 and 1
 type RGB struct {
@@ -45,11 +48,13 @@ func (c RGB) Add(c2 RGB) RGB {
 }
 
 // Average averages the color over n samples
+// Also adds gamma correction
 func (c RGB) Average(nSamples int) RGB {
+	scale := 1.0 / float32(nSamples)
 	return RGB{
-		R: c.R / float32(nSamples),
-		G: c.G / float32(nSamples),
-		B: c.B / float32(nSamples),
+		R: float32(math.Sqrt(float64(c.R * scale))),
+		G: float32(math.Sqrt(float64(c.G * scale))),
+		B: float32(math.Sqrt(float64(c.B * scale))),
 	}
 }
 
