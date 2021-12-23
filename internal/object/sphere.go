@@ -23,10 +23,12 @@ func NewSphere(center vector.Vector, radius float64) Sphere {
 // Intersect calculates the intersection of a ray r with this sphere, between tMin and tMax
 func (s *Sphere) Intersect(r *ray.Ray, tMin, tMax float64, hit *Hit) bool {
 	var oc = r.Origin().Sub(s.Center)
-	var a = math.Pow(r.Direction().Length(), 2)
+	l := r.Direction().Length()
+	var a = l * l
 	var halfB = oc.Dot(r.Direction())
-	var c = math.Pow(oc.Length(), 2) - math.Pow(s.Radius, 2)
-	var discriminant = math.Pow(halfB, 2) - a*c
+	ocl := oc.Length()
+	var c = ocl*ocl - s.Radius*s.Radius
+	var discriminant = halfB*halfB - a*c
 
 	// No hit
 	if discriminant < 0 {

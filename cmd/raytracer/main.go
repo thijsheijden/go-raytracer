@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/draw"
 	"image/jpeg"
+	"log"
 	"math"
 	"math/rand"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"raytracer/internal/ray"
 	"raytracer/internal/scene"
 	"raytracer/internal/vector"
+	"runtime/pprof"
 	"sync"
 	"time"
 
@@ -20,8 +22,8 @@ import (
 )
 
 var loadedScene scene.Scene
-var nPixelSamples = 100
-var maxDepth = 50
+var nPixelSamples = 50
+var maxDepth = 10
 var infinity = math.Inf(1)
 
 // Number of threads to split the work up
@@ -48,7 +50,7 @@ func main() {
 
 	// Image config
 	const aspectRatio = 16.0 / 9.0
-	const imageWidth = 1920
+	const imageWidth = 1280
 	const imageHeight = int(imageWidth / aspectRatio)
 
 	// Camera config
@@ -64,12 +66,12 @@ func main() {
 	const rowsPerThread = imageHeight / nThreads
 	const rest = imageHeight - (nThreads * rowsPerThread)
 
-	// cpuProfile, err := os.Create("profile.pprof")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// pprof.StartCPUProfile(cpuProfile)
-	// defer pprof.StopCPUProfile()
+	cpuProfile, err := os.Create("profile.pprof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(cpuProfile)
+	defer pprof.StopCPUProfile()
 
 	var wg sync.WaitGroup
 	imagePartChan := make(chan imagePart, nThreads)

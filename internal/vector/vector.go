@@ -30,7 +30,8 @@ func Random(min, max float64, random *rand.Rand) Vector {
 func RandomInUnitSphere(random *rand.Rand) Vector {
 	for {
 		p := Random(-1, 1, random)
-		if math.Pow(p.Length(), 2) >= 1 {
+		l := p.Length()
+		if l*l >= 1 {
 			// Outside unit sphere
 			continue
 		}
