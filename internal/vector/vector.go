@@ -101,6 +101,19 @@ func (a Vector) Reflect(n Vector) Vector {
 	return a.Sub(n.Scale(2 * a.Dot(n)))
 }
 
+// Refract refracts a Vector a based on the refraction ratio
+func (a Vector) Refract(n Vector, refrationRatio float64) Vector {
+	// auto cos_theta = fmin(dot(-uv, n), 1.0);
+	//   vec3 r_out_perp =  etai_over_etat * (uv + cos_theta*n);
+	//   vec3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n;
+	//   return r_out_perp + r_out_parallel;
+
+	cosTheta := min(n.Dot(a.Scale(-1)), 1.0)
+	rOutPerpendicular := a.Add(n.Scale(cosTheta)).Scale(refrationRatio)
+	rOutParallel := n.Scale(-math.Sqrt(math.Abs(1 - (rOutPerpendicular.Length() * rOutPerpendicular.Length()))))
+	return rOutParallel.Add(rOutPerpendicular)
+}
+
 // SubScalar subtracts a scalar s from Vector a
 func (a Vector) SubScalar(s float64) Vector {
 	return Vector{
@@ -108,4 +121,11 @@ func (a Vector) SubScalar(s float64) Vector {
 		a.Y - s,
 		a.Z - s,
 	}
+}
+
+func min(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
 }

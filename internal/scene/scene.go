@@ -31,7 +31,7 @@ func ThreeBalls() Scene {
 	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, 0, -1), 0.5, object.Metal(color.New(0.8, 0.8, 0.8))))
 
 	// Right purple sphere
-	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(1, 0, -1), 0.5, object.Lambertian(color.New(0.6, 0, 1))))
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(1, 0, -1), -0.5, object.Dielectric(1.5)))
 
 	// Left sphere
 	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(-1, 0, -1), 0.5, object.FuzzyMetal(color.New(0.8, 0.8, 0.8), 0.2)))

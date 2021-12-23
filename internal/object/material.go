@@ -1,6 +1,7 @@
 package object
 
 import (
+	"math"
 	"math/rand"
 	"raytracer/internal/color"
 	"raytracer/internal/ray"
@@ -75,4 +76,56 @@ func (m fuzzyMetal) Scatter(r *ray.Ray, hit *Hit, attenuation *color.RGB, scatte
 	*scattered = ray.New(hit.Point, reflected.Add(vector.RandomInUnitSphere(rand).Scale(m.fuzziness)))
 	*attenuation = m.albedo
 	return scattered.Direction().Dot(hit.Normal) > 0
+}
+
+type dielectric struct {
+	refractionIndex float64
+}
+
+// Dielectric creates a new dieletric material with the given refraction index
+func Dielectric(refractionIndex float64) Material {
+	return dielectric{
+		refractionIndex: refractionIndex,
+	}
+}
+
+func (m dielectric) Scatter(r *ray.Ray, hit *Hit, attenuation *color.RGB, scattered *ray.Ray, rand *rand.Rand) bool {
+	*attenuation = color.New(1, 1, 1)
+
+	var refractionRatio float64
+	if hit.FrontFace {
+		refractionRatio = 1.0 / m.refractionIndex
+	} else {
+		refractionRatio = m.refractionIndex
+	}
+
+	unitDirection := r.Direction().Normalise()
+	cosTheta := min(unitDirection.Scale(-1).Dot(hit.Normal), 1.0)
+	sinTheta := math.Sqrt(1.0 - cosTheta*cosTheta)
+
+	cannotRefract := refractionRatio*sinTheta > 1.0
+	var direction vector.Vector
+
+	if cannotRefract || reflectance(cosTheta, refractionRatio) > rand.Float64() {
+		direction = unitDirection.Reflect(hit.Normal)
+	} else {
+		direction = unitDirection.Refract(hit.Normal, refractionRatio)
+	}
+
+	*scattered = ray.New(hit.Point, direction)
+	return true
+}
+
+func reflectance(cos, refractionRatio float64) float64 {
+	// Use Schlick's approximation for reflectance.
+	r0 := (1 - refractionRatio) / (1 + refractionRatio)
+	r0 = r0 * r0
+	return r0 + (1-r0)*math.Pow(1-cos, 5)
+}
+
+func min(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
 }
