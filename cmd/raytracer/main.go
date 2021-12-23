@@ -36,7 +36,7 @@ type imagePart struct {
 
 func main() {
 	// Load in a scene file
-	f, err := os.Open("scenes/singleSphere.json")
+	f, err := os.Open("scenes/threeSpheres.json")
 	if err != nil {
 		panic(err)
 	}

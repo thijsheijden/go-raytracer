@@ -95,3 +95,17 @@ func (a Vector) NearZero() bool {
 	s := 1e-8
 	return a.X < s && a.Y < s && a.Z < s
 }
+
+// Reflect reflects a Vector a based on normal n
+func (a Vector) Reflect(n Vector) Vector {
+	return a.Sub(n.Scale(2 * a.Dot(n)))
+}
+
+// SubScalar subtracts a scalar s from Vector a
+func (a Vector) SubScalar(s float64) Vector {
+	return Vector{
+		a.X - s,
+		a.Y - s,
+		a.Z - s,
+	}
+}
