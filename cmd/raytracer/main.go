@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"image"
 	"image/draw"
 	"image/jpeg"
@@ -35,19 +34,7 @@ type imagePart struct {
 }
 
 func main() {
-	// Load in a scene file
-	f, err := os.Open("scenes/threeSpheres.json")
-	if err != nil {
-		panic(err)
-	}
-
-	// Decode the scene
-	err = json.NewDecoder(f).Decode(&loadedScene)
-	if err != nil {
-		panic(err)
-	}
-	f.Close()
-	loadedScene.InitMaterials()
+	loadedScene = scene.ThreeBalls()
 
 	// Image config
 	const aspectRatio = 16.0 / 9.0

@@ -9,18 +9,18 @@ import (
 
 // Sphere is a sphere, duh
 type Sphere struct {
-	Center       vector.Vector `json:"center"`
-	Radius       float64       `json:"radius"`
-	Material     Material      `json:"-"`
-	MaterialName string        `json:"materialName"`
-	Albedo       color.RGB     `json:"albedo"`
+	Center   vector.Vector
+	Radius   float64
+	Material Material
+	Albedo   color.RGB
 }
 
 // NewSphere creates a new Sphere
-func NewSphere(center vector.Vector, radius float64) Sphere {
-	return Sphere{
-		Center: center,
-		Radius: radius,
+func NewSphere(center vector.Vector, radius float64, material Material) *Sphere {
+	return &Sphere{
+		Center:   center,
+		Radius:   radius,
+		Material: material,
 	}
 }
 

@@ -1,6 +1,7 @@
 package scene
 
 import (
+	"raytracer/internal/color"
 	"raytracer/internal/object"
 	"raytracer/internal/ray"
 	"raytracer/internal/vector"
@@ -17,11 +18,28 @@ type camera struct {
 	Position vector.Vector `json:"position"`
 }
 
-// InitMaterials initialises all materials
-func (s *Scene) InitMaterials() {
-	for _, s := range s.Spheres {
-		s.Material = object.NewMaterial(s.MaterialName, s.Albedo)
+// ThreeBalls returns a scene with three balls
+func ThreeBalls() Scene {
+	s := Scene{
+		Camera: camera{
+			Position: vector.New(0, 0, 0),
+		},
+		Spheres: make([]*object.Sphere, 0),
 	}
+
+	// Center metal sphere
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, 0, -1), 0.5, object.Metal(color.New(0.8, 0.8, 0.8))))
+
+	// Right purple sphere
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(1, -0.25, -1), 0.25, object.Lambertian(color.New(0.6, 0, 1))))
+
+	// Left sphere
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(-1, 0, -0.5), 0.5, object.Lambertian(color.New(0.6, 0.5, 1))))
+
+	// Ground plane sphere
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, -100.5, -1), 100, object.Lambertian(color.New(0, 1, 0))))
+
+	return s
 }
 
 // Hit checks for hits in the scene
