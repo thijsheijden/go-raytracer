@@ -89,3 +89,9 @@ func (a Vector) Cross(b Vector) Vector {
 func (a Vector) Normalise() Vector {
 	return a.Scale(1 / a.Length())
 }
+
+// NearZero checks if a vector is close to zero in all dimensions
+func (a Vector) NearZero() bool {
+	s := 1e-8
+	return a.X < s && a.Y < s && a.Z < s
+}

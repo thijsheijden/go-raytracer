@@ -27,7 +27,7 @@ var maxDepth = 10
 var infinity = math.Inf(1)
 
 // Number of threads to split the work up
-const nThreads = 16
+const nThreads = 8
 
 type imagePart struct {
 	index, height int
@@ -47,6 +47,7 @@ func main() {
 		panic(err)
 	}
 	f.Close()
+	loadedScene.InitMaterials()
 
 	// Image config
 	const aspectRatio = 16.0 / 9.0
@@ -157,12 +158,14 @@ func colorRay(r ray.Ray, depth int, random *rand.Rand) color.RGB {
 
 	var hit object.Hit
 
-	// Go over all spheres
-	for _, s := range loadedScene.Spheres {
-		if s.Intersect(&r, 0.001, infinity, &hit) {
-			target := hit.Point.Add(hit.Normal).Add(vector.RandomInUnitSphere(random))
-			return colorRay(ray.New(hit.Point, target.Sub(hit.Point)), depth-1, random).Mul(0.5, 0.5, 0.5)
+	if loadedScene.Hit(&r, 0.001, infinity, &hit) {
+		var scattered ray.Ray
+		var attenuation color.RGB
+
+		if hit.Material.Scatter(&r, &hit, &attenuation, &scattered, random) {
+			return colorRay(scattered, depth-1, random).Mul(attenuation.R, attenuation.G, attenuation.B)
 		}
+		return color.New(0, 0, 0)
 	}
 
 	t := float32(0.5 * (r.Direction().Normalise().Y + 1.0))

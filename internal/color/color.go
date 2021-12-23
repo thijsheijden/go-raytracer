@@ -7,7 +7,9 @@ import (
 
 // RGB describes an RGB color using float values between 0 and 1
 type RGB struct {
-	R, G, B float32
+	R float32 `json:"r"`
+	G float32 `json:"g"`
+	B float32 `json:"b"`
 }
 
 // New creates a new RGB color

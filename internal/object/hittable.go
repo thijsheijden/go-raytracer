@@ -16,6 +16,7 @@ type Hit struct {
 	Normal    vector.Vector // Normal for the hit
 	T         float64       // The distance at which the hit occurred
 	FrontFace bool          // Whether the normal faces outwards
+	Material  Material      // A pointer to the material that was hit
 }
 
 // SetFaceNormal sets the normal based on the dot product between the ray direction and the outward normal
