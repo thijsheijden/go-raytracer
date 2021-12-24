@@ -21,12 +21,12 @@ import (
 )
 
 var loadedScene scene.Scene
-var nPixelSamples = 50
-var maxDepth = 10
+var nPixelSamples = 100
+var maxDepth = 50
 var infinity = math.Inf(1)
 
 // Number of threads to split the work up
-const nThreads = 8
+const nThreads = 10
 
 type imagePart struct {
 	index, height int
@@ -34,25 +34,12 @@ type imagePart struct {
 }
 
 func main() {
-	loadedScene = scene.ThreeBalls()
-
-	// Image config
 	const aspectRatio = 16.0 / 9.0
-	const imageWidth = 1280
-	const imageHeight = int(imageWidth / aspectRatio)
+	loadedScene = scene.New(scene.NewCamera(vector.New(0, 0, 0), vector.New(0, 0, 0), 90, 2.0, aspectRatio, 1.0), aspectRatio, 400)
+	loadedScene.GlassBalls()
 
-	// Camera config
-	const viewportHeight = 2.0
-	const viewportWidth = aspectRatio * viewportHeight
-	const focalLength = 1
-
-	var origin = vector.Vector{0, 0, 0}
-	var horizontal = vector.Vector{viewportWidth, 0, 0}
-	var vertical = vector.Vector{0, viewportHeight, 0}
-	var lowerLeftCorner = origin.Sub(horizontal.Scale(0.5)).Sub(vertical.Scale(0.5)).Sub(vector.Vector{0, 0, focalLength})
-
-	const rowsPerThread = imageHeight / nThreads
-	const rest = imageHeight - (nThreads * rowsPerThread)
+	var rowsPerThread = loadedScene.ImageHeight / nThreads
+	var rest = loadedScene.ImageHeight - (nThreads * rowsPerThread)
 
 	cpuProfile, err := os.Create("profile.pprof")
 	if err != nil {
@@ -80,19 +67,19 @@ func main() {
 		go func(thread, startY, endY int, random *rand.Rand, imagePartChan chan imagePart) {
 			defer wg.Done()
 			// Create slice for image part
-			img := image.NewRGBA(image.Rect(0, 0, imageWidth, (endY - startY)))
+			img := image.NewRGBA(image.Rect(0, 0, loadedScene.ImageWidth, (endY - startY)))
 
 			// Cast rays for each of the image pixels
 			for y := startY; y <= endY; y++ {
-				for x := 0; x < imageWidth; x++ {
+				for x := 0; x < loadedScene.ImageWidth; x++ {
 					// Define a new color for this pixel, which we will average later
 					var pixelColor color.RGB = color.New(0, 0, 0)
 
 					// Anti-aliasing
 					for i := 0; i < nPixelSamples; i++ {
-						var u float64 = (float64(x) + random.Float64()) / (imageWidth + 1)
-						var v float64 = (float64(y) + random.Float64()) / float64(imageHeight+1)
-						r := ray.New(origin, lowerLeftCorner.Add(horizontal.Scale(u)).Add(vertical.Scale(v)).Sub(origin))
+						var u float64 = (float64(x) + random.Float64()) / (loadedScene.FloatImageWidth + 1.0)
+						var v float64 = (float64(y) + random.Float64()) / float64(loadedScene.FloatImageHeight+1)
+						r := ray.New(loadedScene.Origin, loadedScene.LowerLeftCorner.Add(loadedScene.Horizontal.Scale(u)).Add(loadedScene.Vertical.Scale(v)).Sub(loadedScene.Origin))
 						pixelColor = pixelColor.Add(colorRay(r, maxDepth, random))
 					}
 
@@ -112,9 +99,9 @@ func main() {
 	close(imagePartChan)
 
 	// Stitch all image parts together
-	fullImage := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
+	fullImage := image.NewRGBA(image.Rect(0, 0, loadedScene.ImageWidth, loadedScene.ImageHeight))
 	for part := range imagePartChan {
-		r := image.Rect(0, part.index*rowsPerThread, imageWidth, part.index*rowsPerThread+part.height)
+		r := image.Rect(0, part.index*rowsPerThread, loadedScene.ImageWidth, part.index*rowsPerThread+part.height)
 		draw.Draw(fullImage, r, part.image, image.ZP, draw.Src)
 	}
 
