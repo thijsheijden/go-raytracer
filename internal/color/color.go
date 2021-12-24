@@ -3,6 +3,7 @@ package color
 import (
 	"image/color"
 	"math"
+	"math/rand"
 )
 
 // RGB describes an RGB color using float values between 0 and 1
@@ -57,6 +58,24 @@ func (c RGB) Average(nSamples int) RGB {
 		R: float32(math.Sqrt(float64(c.R * scale))),
 		G: float32(math.Sqrt(float64(c.G * scale))),
 		B: float32(math.Sqrt(float64(c.B * scale))),
+	}
+}
+
+// Random returns a random color
+func Random() RGB {
+	return RGB{
+		R: rand.Float32(),
+		G: rand.Float32(),
+		B: rand.Float32(),
+	}
+}
+
+// RandomInRange returns a color within the min, max range
+func RandomInRange(min, max float32) RGB {
+	return RGB{
+		R: min + rand.Float32()*(max-min),
+		G: min + rand.Float32()*(max-min),
+		B: min + rand.Float32()*(max-min),
 	}
 }
 

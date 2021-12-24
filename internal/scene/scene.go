@@ -2,6 +2,7 @@ package scene
 
 import (
 	"math"
+	"math/rand"
 	"raytracer/internal/color"
 	"raytracer/internal/object"
 	"raytracer/internal/ray"
@@ -105,10 +106,40 @@ func (s *Scene) GlassBalls() {
 	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(1.5, 0, -6), 0.5, object.Lambertian(color.New(0.5, 0, 0.5))))
 
 	// Light red fuzzy metal sphere to the right
-	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(1, 0, -1), 0.5, object.Metal(color.New(0.5, 0, 0))))
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(1, 0, -1), 0.5, object.Metal(color.New(0.8, 0.8, 0.8))))
 
 	// Ground plane sphere
 	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, -100.5, -1), 100, object.Lambertian(color.New(0.6, 0.6, 0.6))))
+}
+
+func (s *Scene) LotsOfSpheres() {
+	groundMaterial := object.Lambertian(color.New(0.5, 0.5, 0.5))
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, -1000, 0), 1000, groundMaterial))
+
+	for a := -11.0; a < 11; a++ {
+		for b := -11.0; b < 11; b++ {
+			chooseMat := rand.Float64()
+			center := vector.New(a+0.9*rand.Float64(), 0.2, b+0.9*rand.Float64())
+			if center.Sub(vector.New(4, 0.2, 0)).Length() > 0.9 {
+
+				if chooseMat < 0.8 {
+					s.Spheres = append(s.Spheres, object.NewSphere(center, 0.2, object.Lambertian(color.Random())))
+					continue
+				}
+
+				if chooseMat < 0.95 {
+					s.Spheres = append(s.Spheres, object.NewSphere(center, 0.2, object.FuzzyMetal(color.RandomInRange(0.5, 1), randomInRange(0, 0.5))))
+					continue
+				}
+
+				s.Spheres = append(s.Spheres, object.NewSphere(center, 0.2, object.Dielectric(1.5)))
+			}
+		}
+	}
+
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, 1, 0), 1.0, object.Dielectric(1.5)))
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(-4, 1, 0), 1.0, object.Lambertian(color.New(0.4, 0.2, 0.1))))
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(4, 1, 0), 1.0, object.Metal(color.New(0.7, 0.6, 0.5))))
 }
 
 // Hit checks for hits in the scene
@@ -126,4 +157,8 @@ func (s *Scene) Hit(r *ray.Ray, tMin, tMax float64, hit *object.Hit) bool {
 	}
 
 	return hitAnything
+}
+
+func randomInRange(min, max float64) float64 {
+	return min + rand.Float64()*(max-min)
 }

@@ -21,13 +21,13 @@ import (
 )
 
 var loadedScene scene.Scene
-var nPixelSamples = 100
+var nPixelSamples = 500
 var maxDepth = 50
 var infinity = math.Inf(1)
 var imageWidth = 1080
 
 // Number of threads to split the work up
-const nThreads = 12
+const nThreads = 16
 
 type imagePart struct {
 	index, height int
@@ -36,8 +36,8 @@ type imagePart struct {
 
 func main() {
 	const aspectRatio = 16.0 / 9.0
-	loadedScene = scene.New(scene.NewCamera(vector.New(-2, 2, 1), vector.New(0, 0, -1), vector.New(0, 1, 0), 90, aspectRatio, 1.0), aspectRatio, imageWidth)
-	loadedScene.GlassBalls()
+	loadedScene = scene.New(scene.NewCamera(vector.New(13, 2, 3), vector.New(0, 0, 0), vector.New(0, 1, 0), 20, aspectRatio, 1.0), aspectRatio, imageWidth)
+	loadedScene.LotsOfSpheres()
 
 	var rowsPerThread = loadedScene.ImageHeight / nThreads
 	var rest = loadedScene.ImageHeight - (nThreads * rowsPerThread)
