@@ -112,6 +112,7 @@ func (s *Scene) GlassBalls() {
 	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, -100.5, -1), 100, object.Lambertian(color.New(0.6, 0.6, 0.6))))
 }
 
+// LotsOfSpheres generates a scene with many, many randomly placed and materialised spheres
 func (s *Scene) LotsOfSpheres() {
 	groundMaterial := object.Lambertian(color.New(0.5, 0.5, 0.5))
 	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, -1000, 0), 1000, groundMaterial))
