@@ -23,8 +23,9 @@ type Scene struct {
 
 // Camera is the camera
 type Camera struct {
-	Position       vector.Vector
-	LookDirection  vector.Vector
+	Position       vector.Vector // The position of the camera
+	LookAt         vector.Vector // The point the camera is looking at
+	VUp            vector.Vector // The vector pointing up from the camera, used for rotation
 	VerticalFOV    float64
 	FocalLength    float64
 	ViewportWidth  float64
@@ -33,9 +34,15 @@ type Camera struct {
 
 // New creates a new scene
 func New(camera Camera, aspectRatio float64, imageWidth int) Scene {
-	origin := vector.New(0, 0, 0)
-	horizontal := vector.New(camera.ViewportWidth, 0, 0)
-	vertical := vector.New(0, camera.ViewportHeight, 0)
+	// Camera direction and placement
+	w := camera.Position.Sub(camera.LookAt).Normalise()
+	u := camera.VUp.Cross(w).Normalise()
+	v := w.Cross(u)
+
+	// Scene constants
+	origin := camera.Position
+	horizontal := u.Scale(camera.ViewportWidth)
+	vertical := v.Scale(camera.ViewportHeight)
 	imageHeight := int(float64(imageWidth) / aspectRatio)
 
 	return Scene{
@@ -43,7 +50,7 @@ func New(camera Camera, aspectRatio float64, imageWidth int) Scene {
 		Origin:           origin,
 		Horizontal:       horizontal,
 		Vertical:         vertical,
-		LowerLeftCorner:  origin.Sub(horizontal.Scale(0.5)).Sub(vertical.Scale(0.5)).Sub(vector.New(0, 0, camera.FocalLength)),
+		LowerLeftCorner:  origin.Sub(horizontal.Scale(0.5)).Sub(vertical.Scale(0.5)).Sub(w),
 		ImageWidth:       imageWidth,
 		ImageHeight:      imageHeight,
 		FloatImageWidth:  float64(imageWidth),
@@ -53,7 +60,7 @@ func New(camera Camera, aspectRatio float64, imageWidth int) Scene {
 }
 
 // NewCamera creates a new camera
-func NewCamera(position, lookDirection vector.Vector, verticalFOV, aspectRatio, focalLength float64) Camera {
+func NewCamera(position, lookAt, vup vector.Vector, verticalFOV, aspectRatio, focalLength float64) Camera {
 	// FOV calculations
 	theta := verticalFOV * (math.Pi / 180)
 	h := math.Tan(theta / 2)
@@ -61,7 +68,8 @@ func NewCamera(position, lookDirection vector.Vector, verticalFOV, aspectRatio, 
 
 	return Camera{
 		Position:       position,
-		LookDirection:  lookDirection,
+		LookAt:         lookAt,
+		VUp:            vup,
 		VerticalFOV:    verticalFOV,
 		ViewportWidth:  aspectRatio * viewportHeight,
 		ViewportHeight: viewportHeight,
@@ -97,7 +105,7 @@ func (s *Scene) GlassBalls() {
 	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(1.5, 0, -6), 0.5, object.Lambertian(color.New(0.5, 0, 0.5))))
 
 	// Light red fuzzy metal sphere to the right
-	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(1, 0, -1), 0.5, object.FuzzyMetal(color.New(0.5, 0, 0), 0.2)))
+	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(1, 0, -1), 0.5, object.Metal(color.New(0.5, 0, 0))))
 
 	// Ground plane sphere
 	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, -100.5, -1), 100, object.Lambertian(color.New(0.6, 0.6, 0.6))))
