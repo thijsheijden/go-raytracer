@@ -26,7 +26,7 @@ var maxDepth = 50
 var infinity = math.Inf(1)
 
 // Number of threads to split the work up
-const nThreads = 10
+const nThreads = 8
 
 type imagePart struct {
 	index, height int
@@ -35,7 +35,7 @@ type imagePart struct {
 
 func main() {
 	const aspectRatio = 16.0 / 9.0
-	loadedScene = scene.New(scene.NewCamera(vector.New(0, 0, 0), vector.New(0, 0, 0), 90, 2.0, aspectRatio, 1.0), aspectRatio, 400)
+	loadedScene = scene.New(scene.NewCamera(vector.New(0, 0, 0), vector.New(0, 0, 0), 90, aspectRatio, 1.0), aspectRatio, 400)
 	loadedScene.GlassBalls()
 
 	var rowsPerThread = loadedScene.ImageHeight / nThreads

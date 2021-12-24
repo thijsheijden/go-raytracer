@@ -1,6 +1,7 @@
 package scene
 
 import (
+	"math"
 	"raytracer/internal/color"
 	"raytracer/internal/object"
 	"raytracer/internal/ray"
@@ -36,6 +37,7 @@ func New(camera Camera, aspectRatio float64, imageWidth int) Scene {
 	horizontal := vector.New(camera.ViewportWidth, 0, 0)
 	vertical := vector.New(0, camera.ViewportHeight, 0)
 	imageHeight := int(float64(imageWidth) / aspectRatio)
+
 	return Scene{
 		Camera:           camera,
 		Origin:           origin,
@@ -51,7 +53,12 @@ func New(camera Camera, aspectRatio float64, imageWidth int) Scene {
 }
 
 // NewCamera creates a new camera
-func NewCamera(position, lookDirection vector.Vector, verticalFOV, viewportHeight, aspectRatio, focalLength float64) Camera {
+func NewCamera(position, lookDirection vector.Vector, verticalFOV, aspectRatio, focalLength float64) Camera {
+	// FOV calculations
+	theta := verticalFOV * (math.Pi / 180)
+	h := math.Tan(theta / 2)
+	viewportHeight := 2.0 * h
+
 	return Camera{
 		Position:       position,
 		LookDirection:  lookDirection,
@@ -64,7 +71,6 @@ func NewCamera(position, lookDirection vector.Vector, verticalFOV, viewportHeigh
 
 // ThreeBalls returns a scene with three balls
 func (s *Scene) ThreeBalls() {
-
 	// Center metal sphere
 	s.Spheres = append(s.Spheres, object.NewSphere(vector.New(0, 0, -1), 0.5, object.Metal(color.New(0.8, 0.8, 0.8))))
 
